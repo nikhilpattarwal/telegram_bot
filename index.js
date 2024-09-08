@@ -50,8 +50,8 @@ bot.start(async (ctx) => {
     });
 
     const data = await response.json();
+    console.log('data',data)
     COINBALANCE = data.user.coin_balance;
-
     if (!data.data.user) {
       response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
