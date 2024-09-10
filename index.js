@@ -106,7 +106,7 @@ Invite them to join the fun—more people, more tokens!`;
 
 
 
-    ctx.reply(`Welcome to the TapMe game, ${username}!. You coin balance is ${COINBALANCE}`);
+    // ctx.reply(`Welcome to the TapMe game, ${username}!. You coin balance is ${COINBALANCE}`);
     connections.forEach((ws) => {
       ws.send(JSON.stringify({ id: userId, username }));
     });
