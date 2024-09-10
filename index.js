@@ -1,41 +1,46 @@
-import fetch from 'node-fetch';
-import { Telegraf } from 'telegraf';
-import { WebSocketServer } from 'ws';
-import express from 'express';
-import dotenv from 'dotenv';
+import fetch from "node-fetch";
+import { Telegraf } from "telegraf";
+import { WebSocketServer } from "ws";
+import express from "express";
+import dotenv from "dotenv";
 dotenv.config();
 let COINBALANCE = 0;
 
+//websocket
 const ws = new WebSocketServer({ port: 8080 });
-const app = express(); 
+const app = express();
 const bot = new Telegraf(process.env.BOT_TOKEN);
 
-const GRAPHQL_ENDPOINT = 'https://bot-backend-c5u1.onrender.com/graphql';
+const GRAPHQL_ENDPOINT = "https://bot-backend-c5u1.onrender.com/graphql";
 
 const connections = new Map();
 
-ws.on('connection', (ws) => {
-  console.log('Frontend connected to WebSocket');
-  
+ws.on("connection", (ws) => {
+  console.log("Frontend connected to WebSocket");
+
   const clientId = Math.random().toString(36).substring(2);
   connections.set(clientId, ws);
-  
-  ws.on('close', () => {
+
+  ws.on("close", () => {
     connections.delete(clientId);
   });
 });
 
-bot.telegram.setWebhook(`${process.env.DOMAIN}/telegram`);
-app.use(bot.webhookCallback('/telegram'));
 
+// webhook connection
+bot.telegram.setWebhook(`${process.env.DOMAIN}/telegram`);
+app.use(bot.webhookCallback("/telegram"));
+
+
+// bot start command
 bot.start(async (ctx) => {
-  const userId = ctx.from.id.toString(); 
+  const userId = ctx.from.id.toString();
   const username = ctx.from.username || ctx.from.first_name;
-    console.log(userId, username);
+  console.log(userId, username);
   try {
     let response = await fetch(GRAPHQL_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: `
           query {
@@ -48,11 +53,11 @@ bot.start(async (ctx) => {
     });
 
     const data = await response.json();
-    console.log('data',data)
+    console.log("data", data);
     if (!data.data.user) {
       response = await fetch(GRAPHQL_ENDPOINT, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: `
             mutation {
@@ -67,14 +72,14 @@ bot.start(async (ctx) => {
       });
 
       const creationData = await response.json();
-      console.log('creationData',creationData)
+      console.log("creationData", creationData);
       if (creationData.errors) {
         throw new Error(`GraphQL error: ${creationData.errors[0].message}`);
       }
     }
 
     // }
-    const tempUrl ='https://nikhil-pattarwal-coinbase.netlify.app/';
+    const tempUrl = "https://nikhil-pattarwal-coinbase.netlify.app/";
 
     const welcomeMessage = `Hey there, @${username}! Welcome to the coinrobot experience!
 Start earning coins now by tapping on the robot and watch your balance grow.
@@ -83,44 +88,42 @@ coinrobot is an innovative platform designed to reward users through our mining 
 
 Got friends, family, or colleagues?
 Invite them to join the fun—more people, more tokens!`;
-    
 
-       const inlineKeyboard = [
-        [
-          {
-            text: 'Start Now',
-            web_app: {
-              url: tempUrl
-            }
-          }
-        ]
-      ];
+    const inlineKeyboard = [
+      [
+        {
+          text: "Start Now",
+          web_app: {
+            url: tempUrl,
+          },
+        },
+      ],
+    ];
 
-  ctx.reply(welcomeMessage, {
-    reply_markup: {
-      inline_keyboard: inlineKeyboard 
-    }
-  });
-
-
+    ctx.reply(welcomeMessage, {
+      reply_markup: {
+        inline_keyboard: inlineKeyboard,
+      },
+    });
 
     connections.forEach((ws) => {
       ws.send(JSON.stringify({ id: userId, username }));
     });
   } catch (error) {
-    console.error('Error in /start command:', error);
-    ctx.reply('An error occurred while processing your request. Please try again later.');
+    console.error("Error in /start command:", error);
+    ctx.reply(
+      "An error occurred while processing your request. Please try again later."
+    );
   }
 });
 
-
-
-bot.command('balance', async (ctx) => {
+//balance bot command
+bot.command("balance", async (ctx) => {
   const userId = ctx.from.id;
 
   const response = await fetch(GRAPHQL_ENDPOINT, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       query: `
         query {
@@ -136,16 +139,20 @@ bot.command('balance', async (ctx) => {
   const data = await response.json();
 
   if (data.data.user) {
-    ctx.reply(`Your current coin balance is ${data.data.user?.coin_balance || 0}.`);
+    ctx.reply(
+      `Your current coin balance is ${data.data.user?.coin_balance || 0}.`
+    );
   } else {
-    ctx.reply('User not found.');
+    ctx.reply("User not found.");
   }
 });
 
 const PORT = process.env.PORT || 3001;
 
+
+//app
 app.listen(PORT, () => {
-  console.log('Server is running on port 3000');
+  console.log("Server is running on port 3000");
 });
 
 // bot.launch().then(() => {
@@ -154,6 +161,6 @@ app.listen(PORT, () => {
 //   console.error('Error launching bot:', error);
 // });
 
-process.on('unhandledRejection', (error) => {
-  console.error('Unhandled promise rejection:', error);
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
 });
