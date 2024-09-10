@@ -30,8 +30,8 @@ app.use(bot.webhookCallback('/telegram'));
 
 bot.start(async (ctx) => {
   const userId = ctx.from.id.toString(); 
-  const username = ctx.from.username;
-  console.log(userId, username);
+  const username = ctx.from.username || ctx.from.first_name;
+    console.log(userId, username);
   try {
     let response = await fetch(GRAPHQL_ENDPOINT, {
       method: 'POST',
@@ -67,6 +67,7 @@ bot.start(async (ctx) => {
       });
 
       const creationData = await response.json();
+      console.log('creationData',creationData)
       if (creationData.errors) {
         throw new Error(`GraphQL error: ${creationData.errors[0].message}`);
       }
