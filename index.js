@@ -41,8 +41,6 @@ bot.start(async (ctx) => {
           query {
             user(id: "${userId}") {
               id
-              username
-              coin_balance
             }
           }
         `,
@@ -51,7 +49,6 @@ bot.start(async (ctx) => {
 
     const data = await response.json();
     console.log('data',data)
-    COINBALANCE = data.data.user?.coin_balance;
     if (!data.data.user) {
       response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
@@ -106,7 +103,6 @@ Invite them to join the fun—more people, more tokens!`;
 
 
 
-    ctx.reply(`Welcome to the TapMe game, ${username}!. You coin balance is ${COINBALANCE || 0}`);
     connections.forEach((ws) => {
       ws.send(JSON.stringify({ id: userId, username }));
     });
