@@ -51,7 +51,7 @@ bot.start(async (ctx) => {
 
     const data = await response.json();
     console.log('data',data)
-    COINBALANCE = data.data.user.coin_balance;
+    COINBALANCE = data.data.user?.coin_balance;
     if (!data.data.user) {
       response = await fetch(GRAPHQL_ENDPOINT, {
         method: 'POST',
@@ -106,7 +106,7 @@ Invite them to join the fun—more people, more tokens!`;
 
 
 
-    // ctx.reply(`Welcome to the TapMe game, ${username}!. You coin balance is ${COINBALANCE}`);
+    ctx.reply(`Welcome to the TapMe game, ${username}!. You coin balance is ${COINBALANCE || 0}`);
     connections.forEach((ws) => {
       ws.send(JSON.stringify({ id: userId, username }));
     });
@@ -139,7 +139,7 @@ bot.command('balance', async (ctx) => {
   const data = await response.json();
 
   if (data.data.user) {
-    ctx.reply(`Your current coin balance is ${data.data.user.coin_balance}.`);
+    ctx.reply(`Your current coin balance is ${data.data.user?.coin_balance || 0}.`);
   } else {
     ctx.reply('User not found.');
   }
